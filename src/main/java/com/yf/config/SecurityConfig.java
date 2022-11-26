@@ -1,12 +1,16 @@
 package com.yf.config;
 
+import com.yf.handler.MyAuthenticationSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 /**
  * @projectName: springboot-security
@@ -22,6 +26,10 @@ import org.springframework.stereotype.Component;
 //开启过滤器链对请求的拦截
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    @Resource
+    private MyAuthenticationSuccessHandler successHandler;
+    @Resource
+    private AuthenticationFailureHandler failureHandler;
     /**
      * @Author yangfeng
      * @Description //配置认证用户信息
@@ -53,7 +61,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/addOrder").hasAnyAuthority("addOrder")
                 .antMatchers("/updateOrder").hasAnyAuthority("updateOrder")
                 .antMatchers("/deleteOrder").hasAnyAuthority("deleteOrder")
-                .antMatchers("/**").fullyAuthenticated().and().formLogin();
+                .antMatchers("/login").permitAll()//设置不拦截登录请求
+                .antMatchers("/**").fullyAuthenticated().and()
+                .formLogin().loginPage("/login")
+                .successHandler(successHandler).failureHandler(failureHandler)
+                .and().csrf().disable();
 
     }
 
