@@ -1,12 +1,16 @@
 package com.yf.config;
 
 import com.yf.handler.MyAuthenticationSuccessHandler;
+import com.yf.service.MyUserDetailsService;
+import com.yf.utils.MD5Util;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +34,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private MyAuthenticationSuccessHandler successHandler;
     @Resource
     private AuthenticationFailureHandler failureHandler;
+    @Autowired
+    private MyUserDetailsService userDetailsService;
     /**
      * @Author yangfeng
      * @Description //配置认证用户信息
@@ -41,9 +47,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      **/
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.inMemoryAuthentication().withUser("admin").password("123456")
-                .authorities("addOrder","showOrder","updateOrder","deleteOrder");
-        auth.inMemoryAuthentication().withUser("userAdd").password("123456").authorities("showOrder","addOrder");
+//        auth.inMemoryAuthentication().withUser("admin").password("123456")
+//                .authorities("addOrder","showOrder","updateOrder","deleteOrder");
+//        auth.inMemoryAuthentication().withUser("userAdd").password("123456").authorities("showOrder","addOrder");
+        auth.userDetailsService(userDetailsService).passwordEncoder(new PasswordEncoder() {
+            //对表单的密码加密处理
+            @Override
+            public String encode(CharSequence rawPassword) {
+                return MD5Util.encode((String)rawPassword);
+            }
+            //表单密码和数据库密码做比对
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                return this.encode(rawPassword).equals(encodedPassword);
+            }
+        });
 
     }
     /**
